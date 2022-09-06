@@ -1,5 +1,8 @@
 import * as THREE from '../node_modules/three/build/three.module.js';
 
+let fragmentShader = await fetch("/shaders/fragment.glsl").then(a=>a.text());
+let vertexShader = await fetch("/shaders/vertex.glsl").then(a=>a.text());
+
 let width = window.innerWidth;
 let height = window.innerHeight;
 
@@ -14,17 +17,12 @@ const geometry = new THREE.BoxGeometry( width, height, 1 );
 const material = new THREE.ShaderMaterial( {
 
 	uniforms: {
-
-		time: { value: 1.0 },
-		resolution: { value: new THREE.Vector2() }
-
+		time: {value: 1.0},
+		resolution: { value: new THREE.Vector2(width, height) }
 	},
 
-	fragmentShader: `
-  void main() {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-  }
-  `
+	fragmentShader: fragmentShader,
+	vertexShader: vertexShader
 
 } );
 const cube = new THREE.Mesh( geometry, material );
