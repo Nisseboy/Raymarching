@@ -18,7 +18,8 @@ const material = new THREE.ShaderMaterial( {
 
 	uniforms: {
 		time: {value: 1.0},
-		resolution: { value: new THREE.Vector2(width, height) }
+		resolution: { value: new THREE.Vector2(width, height) },
+		mouse: { value: new THREE.Vector2(0, 0) }
 	},
 
 	fragmentShader: fragmentShader,
@@ -33,5 +34,12 @@ camera.position.z = 5;
 function animate() {
 	requestAnimationFrame( animate );
 	renderer.render( scene, camera );
+
+	let uniforms = material.uniforms;
+	uniforms.time.value++;
 }
 animate();
+
+document.body.addEventListener("mousemove", e => {
+	material.uniforms.mouse.value = new THREE.Vector2(e.clientX, e.clientY);
+});
