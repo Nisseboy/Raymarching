@@ -19,6 +19,8 @@ const material = new THREE.ShaderMaterial( {
 	uniforms: {
 		time: {value: 1.0},
 		resolution: { value: new THREE.Vector2(width, height) },
+		camRot: { value: new THREE.Vector3(0, 0, 1) },
+		camPos: { value: new THREE.Vector3(0, 0, 0) },
 		mouse: { value: new THREE.Vector2(0, 0) }
 	},
 
@@ -31,15 +33,57 @@ scene.add( cube );
 
 camera.position.z = 5;
 
+
+
+
+let pressedKeys = {};
+let mouse = {x: 0.5, y: 0.5};
+
 function animate() {
 	requestAnimationFrame( animate );
 	renderer.render( scene, camera );
 
 	let uniforms = material.uniforms;
 	uniforms.time.value++;
+
+	let movement = {x: 0, y: 0, z: 0}
+	if (pressedKeys.w) {
+		movement.z++;
+	}
+	if (pressedKeys.a) {
+		movement.x--;
+	}
+	if (pressedKeys.s) {
+		movement.z--;
+	}
+	if (pressedKeys.d) {
+		movement.x++;
+	}
+	let camRot = {
+		x: ((1 - mouse.x) - 0.5),
+		y: mouse.y - 0.5
+	};
+	uniforms.camRot.value.x = camRot.x;
+	uniforms.camRot.value.y = camRot.y;
+
+	let rotatedMovement = {
+		x: 0,
+		y: 0,
+		z: 0
+	};
+	uniforms.camPos.value.x += rotatedMovement.x;
+	uniforms.camPos.value.y += rotatedMovement.y;
+	uniforms.camPos.value.z += rotatedMovement.z;
 }
 animate();
 
 document.body.addEventListener("mousemove", e => {
-	material.uniforms.mouse.value = new THREE.Vector2(e.clientX, e.clientY);
+	mouse = {x: e.clientX / width, y: e.clientY / height};
+});
+
+document.body.addEventListener("keydown", e => {
+	pressedKeys[e.key] = true;
+});
+document.body.addEventListener("keyup", e => {
+	pressedKeys[e.key] = false;
 });

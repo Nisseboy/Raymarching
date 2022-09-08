@@ -4,6 +4,8 @@ uniform float time;
 uniform vec2 resolution;
 varying vec2 vUv;
 
+uniform vec3 camRot;
+uniform vec3 camPos;
 uniform vec2 mouse;
 
 
@@ -32,10 +34,15 @@ vec3 getNormal(vec3 pos)
 void main() {
   vec2 uv = (vUv - vec2(0.5, 0.5)) * resolution.xy + vec2(0.5);
 
-  vec3 camPos = vec3(0.0, 0.0, 0.0);
   vec3 dir = normalize(vec3((vUv - vec2(0.5))*(resolution / resolution.y).xy, -1.0));
-
-  vec4 rotation = normalize(vec4(-mouse.y / resolution.y + 0.5, -mouse.x / resolution.x + 0.5, 0.0, 1.0));
+  
+  vec4 q;
+  vec3 v1 = vec3(0, 0, 1);
+  vec3 v2 = camRot;
+  vec3 a = cross(v1, v2);
+  q.xyz = a;
+  q.w = sqrt((pow(length(v1), 2.0)) * (pow(length(v2), 2.0))) + dot(v1, v2);
+  vec4 rotation = normalize(q);
 
   vec3 temp = cross(rotation.xyz, dir) + rotation.w * dir;
   dir = dir + 2.0*cross(rotation.xyz, temp);
