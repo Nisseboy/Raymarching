@@ -1,40 +1,73 @@
 precision highp float;
 
+struct Object {
+  int type; //0: sphere
+  vec3 pos;
+  vec3 dim;
+};
+struct RayResult {
+  float dist;
+  vec3 normal;
+  int i;
+};
+
 uniform float time;
 uniform vec2 resolution;
 varying vec2 vUv;
 
 uniform vec3 camRot;
 uniform vec3 camPos;
-uniform vec2 mouse;
 
+uniform int objectCount;
+uniform Object objects[8];
 
 int stepLimit = 20;
 float nearLimit = 0.001;
 
-float sdSphere(vec3 pos) {
-  return length(pos - vec3(0.0, 0.0, -15.0)) - 5.0;
+
+float sdSphere(vec3 pos, int i) {
+  return length(pos - objects[i].pos) - objects[i].dim.x;
 }
 
-float sdfDist(vec3 pos) {
-  float sphere = sdSphere(pos);
+float sd(vec3 pos, int i) {
+  float sphere = sdSphere(pos, i);
 
   return sphere;
 }
 
-vec3 getNormal(vec3 pos)
+vec3 sdNormal(vec3 pos, int i)
 {
     const float eps = 0.0001;
     const vec2 h = vec2(eps,0);
-    return normalize( vec3(sdfDist(pos+h.xyy) - sdfDist(pos-h.xyy),
-                           sdfDist(pos+h.yxy) - sdfDist(pos-h.yxy),
-                           sdfDist(pos+h.yyx) - sdfDist(pos-h.yyx) ) );
+    return normalize( vec3(sd(pos+h.xyy, i) - sd(pos-h.xyy, i),
+                           sd(pos+h.yxy, i) - sd(pos-h.yxy, i),
+                           sd(pos+h.yyx, i) - sd(pos-h.yyx, i) ) );
 }
 
-void main() {
-  vec2 uv = (vUv - vec2(0.5, 0.5)) * resolution.xy + vec2(0.5);
+RayResult sdf(vec3 pos) {
+  float closestD = 10000000.0;
+  int closest;
+  for (int i = 0; i < objectCount; i++) {
+    float d = sd(pos, i);
+    if (d < closestD) {
+      closestD = d;
+      closest = i;
+    }
+  }
 
-  vec3 dir = normalize(vec3((vUv - vec2(0.5))*(resolution / resolution.y).xy, -1.0));
+  vec3 normal = vec3(0.0);
+
+  if (closestD < nearLimit) {
+    normal = sdNormal(pos, closest);
+  }
+
+  return RayResult(closestD, normal, closest);
+}
+
+
+void main() {
+  vec2 uv = (vUv - vec2(0.5))*(resolution / resolution.y).xy / 2.0;
+  vec3 dir = normalize(vec3(uv, -1.0));
   
   vec4 q;
   vec3 v1 = vec3(0, 0, 1);
@@ -50,10 +83,11 @@ void main() {
   vec4 col = vec4(0, 1, 1, 1);
   vec3 pos = camPos;
   for (int i = 0; i < 256; i++) {
-    float dist = sdfDist(pos);
+    RayResult info = sdf(pos);
+    float dist = info.dist;
 
     if (dist < nearLimit) {
-      vec3 normal = getNormal(pos);
+      vec3 normal = info.normal;
       float light = dot(normal, normalize(vec3(1.0, 1.0, 1.0)));
       col = vec4(1.0, 1.0, 1.0, 1.0) * vec4(light, light, light, 1.0);
     

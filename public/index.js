@@ -21,7 +21,9 @@ const material = new THREE.ShaderMaterial( {
 		resolution: { value: new THREE.Vector2(width, height) },
 		camRot: { value: new THREE.Vector3(0, 0, 1) },
 		camPos: { value: new THREE.Vector3(0, 0, 0) },
-		mouse: { value: new THREE.Vector2(0, 0) }
+
+		objects: {value: []},
+		objectCount: {value: 0}
 	},
 
 	fragmentShader: fragmentShader,
@@ -38,6 +40,15 @@ camera.position.z = 5;
 
 let pressedKeys = {};
 let mouse = {x: 0.5, y: 0.5};
+
+addObject(0, {x: 80, y: 0, z: 0}, {x: 5, y:0,z:0});
+addObject(0, {x: 0, y: 0, z: 80}, {x: 5, y:0,z:0});
+addObject(0, {x: 60, y: 0, z: 60}, {x: 5, y:0,z:0});
+addObject(0, {x: -80, y: 0, z: 0}, {x: 5, y:0,z:0});
+addObject(0, {x: 0, y: 0, z: -80}, {x: 5, y:0,z:0});
+addObject(0, {x: -60, y: 0, z: -60}, {x: 5, y:0,z:0});
+addObject(0, {x: -60, y: 0, z: 60}, {x: 5, y:0,z:0});
+addObject(0, {x: 60, y: 0, z: -60}, {x: 5, y:0,z:0});
 
 function animate() {
 	requestAnimationFrame( animate );
@@ -60,8 +71,8 @@ function animate() {
 		movement.x++;
 	}
 	let camRot = {
-		x: ((1 - mouse.x) - 0.5),
-		y: mouse.y - 0.5
+		x: ((1 - mouse.x) - 0.5) * 10,
+		y: (mouse.y - 0.5) * 10
 	};
 	uniforms.camRot.value.x = camRot.x;
 	uniforms.camRot.value.y = camRot.y;
@@ -77,10 +88,24 @@ function animate() {
 }
 animate();
 
+function addObject(type, pos, dim) {
+	let obj = {
+		type: type,
+		pos: new THREE.Vector3(pos.x, pos.y, pos.z),
+		dim: new THREE.Vector3(dim.x, dim.y, dim.z)
+	};
+
+	let uniforms = material.uniforms;
+
+	uniforms.objects.value.push(obj);
+	uniforms.objectCount.value++;
+
+	return obj;
+}
+
 document.body.addEventListener("mousemove", e => {
 	mouse = {x: e.clientX / width, y: e.clientY / height};
 });
-
 document.body.addEventListener("keydown", e => {
 	pressedKeys[e.key] = true;
 });
